@@ -235,10 +235,6 @@ type quickOperationMessage struct {
 }
 
 func (b *Bot) quickOperation(context, operation any) error {
-	limiter := b.limiter.Load()
-	if limiter != nil && !limiter.check() {
-		return errors.New("rate limit exceeded")
-	}
 	if s, ok := context.(simplifier); ok {
 		context = s.simplify()
 	}
