@@ -115,6 +115,13 @@ type GroupMemberInfo struct {
 	CardChangeable  bool   `json:"card_changeable"`   // 是否允许修改群名片
 }
 
+func (m *GroupMemberInfo) CardOrNickname() string {
+	if m.Card != "" {
+		return m.Card
+	}
+	return m.Nickname
+}
+
 // GetGroupMemberInfo 获取群成员信息，group-群号，qq-QQ号，noCache-是否不使用缓存
 func (b *Bot) GetGroupMemberInfo(group, qq int64, noCache bool) (*GroupMemberInfo, error) {
 	result, err := b.request("get_group_member_info", &struct {

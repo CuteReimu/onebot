@@ -17,6 +17,13 @@ type Friend struct {
 	Remark   string `json:"remark"`   // 备注
 }
 
+func (f *Friend) RemarkOrNickname() string {
+	if f.Remark != "" {
+		return f.Remark
+	}
+	return f.Nickname
+}
+
 func (f *Friend) String() string {
 	return fmt.Sprintf("%s(%d)", f.Nickname, f.UserId)
 }
@@ -42,6 +49,13 @@ type Member struct {
 	Area     string `json:"area"`     // 地区
 	Level    string `json:"level"`    // 成员等级
 	Role     Role   `json:"role"`     // 角色
+}
+
+func (m *Member) CardOrNickname() string {
+	if m.Card != "" {
+		return m.Card
+	}
+	return m.Nickname
 }
 
 func (m *Member) String() string {
