@@ -145,3 +145,12 @@ func (b *Bot) GetGroupMemberList(group int64) ([]*GroupMemberInfo, error) {
 	err = json.Unmarshal([]byte(result.Raw), &groupInfo)
 	return groupInfo, err
 }
+
+// SetGroupLeave 退出群，group-群号，isDismiss-是否解散
+func (b *Bot) SetGroupLeave(group int64, isDismiss bool) error {
+	_, err := b.request("set_group_leave", &struct {
+		GroupId   int64 `json:"group_id"`
+		IsDismiss bool  `json:"is_dismiss,omitempty"`
+	}{group, isDismiss})
+	return err
+}
