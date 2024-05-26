@@ -5,9 +5,9 @@ import "fmt"
 type Role string
 
 const (
-	PermOwner  Role = "owner"  // 群主
-	PermAdmin  Role = "admin"  // 管理员
-	PermMember Role = "member" // 群成员
+	RoleOwner  Role = "owner"  // 群主
+	RoleAdmin  Role = "admin"  // 管理员
+	RoleMember Role = "member" // 群成员
 )
 
 // Friend 好友
