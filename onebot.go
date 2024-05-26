@@ -242,26 +242,11 @@ func (b *Bot) quickOperation(context, operation any) error {
 	if s, ok := context.(simplifier); ok {
 		context = s.simplify()
 	}
-	msg := &requestMessage{
-		Echo:   b.echo.Add(1),
-		Action: ".handle_quick_operation",
-		Params: &quickOperationMessage{
-			Context:   context,
-			Operation: operation,
-		},
-	}
-	buf, err := json.Marshal(msg)
-	if err != nil {
-		slog.Error("json marshal failed", "error", err)
-		return err
-	}
-	err = b.c.WriteMessage(websocket.TextMessage, buf)
-	if err != nil {
-		slog.Error("send error", "error", err)
-		return err
-	}
-	slog.Debug("send", "msg", string(buf))
-	return nil
+	_, err := b.request(".handle_quick_operation", &quickOperationMessage{
+		Context:   context,
+		Operation: operation,
+	})
+	return err
 }
 
 type requestMessage struct {
