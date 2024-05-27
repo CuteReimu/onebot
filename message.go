@@ -439,7 +439,7 @@ func parseMessageChain(results []gjson.Result) MessageChain {
 			if err := json.Unmarshal([]byte(results[i].Get("data").Raw), m); err == nil {
 				ret = append(ret, m)
 			} else {
-				slog.Error("json unmarshal failed", "buf", results[i].Raw, "error", err)
+				slog.Error("json unmarshal failed", "buf", results[i].Get("data").Raw, "error", err)
 			}
 		} else {
 			slog.Error("unknown single message type: " + results[i].String())
