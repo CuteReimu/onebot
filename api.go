@@ -106,7 +106,7 @@ type GroupMemberInfo struct {
 	Age             int32  `json:"age"`               // 年龄
 	Area            string `json:"area"`              // 地区
 	JoinTime        int32  `json:"join_time"`         // 加群时间戳
-	LastSent        int32  `json:"last_sent"`         // 最后发言时间戳
+	LastSentTime    int32  `json:"last_sent_time"`    // 最后发言时间戳
 	Level           string `json:"level"`             // 成员等级
 	Role            Role   `json:"role"`              // 角色
 	Unfriendly      bool   `json:"unfriendly"`        // 是否不良记录成员
