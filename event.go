@@ -9,6 +9,10 @@ func init() {
 		"friend": func() any { return &FriendRequest{} },
 		"group":  func() any { return &GroupRequest{} },
 	}
+	builder["notice"] = map[string]func() any{
+		"group_decrease": func() any { return &GroupDecreaseNotice{} },
+		"group_increase": func() any { return &GroupIncreaseNotice{} },
+	}
 }
 
 type PrivateMessageSubType string
@@ -174,4 +178,53 @@ func (r *GroupRequest) Reply(b *Bot, approve bool, reason string) error {
 // ListenGroupRequest 监听加群请求 / 邀请
 func (b *Bot) ListenGroupRequest(l func(request *GroupRequest) bool) {
 	listen(b, "request", "group", l)
+}
+
+type GroupDecreaseNoticeSubType string
+
+const (
+	GroupDecreaseNoticeLeave  GroupDecreaseNoticeSubType = "leave"   // 主动退群
+	GroupDecreaseNoticeKick   GroupDecreaseNoticeSubType = "kick"    // 成员被踢
+	GroupDecreaseNoticeKickMe GroupDecreaseNoticeSubType = "kick_me" // 机器人被踢
+)
+
+// GroupDecreaseNotice 群成员减少
+type GroupDecreaseNotice struct {
+	Time       int64                      `json:"time"`        // 事件发生的时间戳
+	SelfId     int64                      `json:"self_id"`     // 收到事件的机器人 QQ 号
+	PostType   string                     `json:"post_type"`   // "notice"
+	NoticeType string                     `json:"notice_type"` // "group_decrease"
+	SubType    GroupDecreaseNoticeSubType `json:"sub_type"`    // 事件子类型
+	GroupId    int64                      `json:"group_id"`    // 群号
+	OperatorId int64                      `json:"operator_id"` // 操作者 QQ 号（如果是主动退群，则和 user_id 相同）
+	UserId     int64                      `json:"user_id"`     // 离开者 QQ 号
+}
+
+// ListenGroupDecreaseNotice 监听群成员减少
+func (b *Bot) ListenGroupDecreaseNotice(l func(notice *GroupDecreaseNotice) bool) {
+	listen(b, "notice", "group_decrease", l)
+}
+
+type GroupIncreaseNoticeSubType string
+
+const (
+	GroupIncreaseNoticeApprove GroupIncreaseNoticeSubType = "approve" // 管理员已同意入群
+	GroupIncreaseNoticeInvite  GroupIncreaseNoticeSubType = "invite"  // 管理员已邀请入群
+)
+
+// GroupIncreaseNotice 群成员增加
+type GroupIncreaseNotice struct {
+	Time       int64                      `json:"time"`        // 事件发生的时间戳
+	SelfId     int64                      `json:"self_id"`     // 收到事件的机器人 QQ 号
+	PostType   string                     `json:"post_type"`   // "notice"
+	NoticeType string                     `json:"notice_type"` // "group_increase"
+	SubType    GroupIncreaseNoticeSubType `json:"sub_type"`    // 事件子类型
+	GroupId    int64                      `json:"group_id"`    // 群号
+	OperatorId int64                      `json:"operator_id"` // 操作者 QQ 号（即管理员 QQ 号）
+	UserId     int64                      `json:"user_id"`     // 加入者 QQ 号
+}
+
+// ListenGroupIncreaseNotice 监听群成员增加
+func (b *Bot) ListenGroupIncreaseNotice(l func(notice *GroupIncreaseNotice) bool) {
+	listen(b, "notice", "group_increase", l)
 }
