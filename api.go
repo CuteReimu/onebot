@@ -187,12 +187,12 @@ func (b *Bot) SetFriendAddRequest(flag string, approve bool, remark string) erro
 }
 
 // SetGroupAddRequest 处理加群请求／邀请，flag-从请求中获取，subType-从请求中获取，approve-是否同意，reason-拒绝理由
-func (b *Bot) SetGroupAddRequest(flag string, subType string, approve bool, reason string) error {
+func (b *Bot) SetGroupAddRequest(flag string, subType GroupRequestSubType, approve bool, reason string) error {
 	_, err := b.request("set_group_add_request", &struct {
-		Flag    string `json:"flag"`
-		SubType string `json:"subType"`
-		Approve bool   `json:"approve"`
-		Reason  string `json:"reason,omitempty"`
+		Flag    string              `json:"flag"`
+		SubType GroupRequestSubType `json:"subType"`
+		Approve bool                `json:"approve"`
+		Reason  string              `json:"reason,omitempty"`
 	}{flag, subType, approve, reason})
 	return err
 }
