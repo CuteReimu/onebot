@@ -62,73 +62,90 @@ func Connect(host string, port int, channel WsChannel, accessToken string, qq in
 		}()
 	}
 	go func() {
-		for {
-			t, message, err := c.ReadMessage()
-			if err != nil {
-				log.Error("read error", "error", err)
-				return
+		for !b.closed.Load() {
+			if b.c == nil {
+				time.Sleep(3 * time.Second)
+				log.Info("trying to reconnect")
+				c, resp, err = websocket.DefaultDialer.Dial(addr, header)
+				if err != nil {
+					log.Error("Connect failed")
+					continue
+				}
+				if resp != nil {
+					_ = resp.Body.Close() // 仅为了解决lint警告，调用Close方法其实是没有任何效果的
+				}
+				log.Info("Connected successfully")
+				b.c = c
 			}
-			if t != websocket.TextMessage {
-				continue
-			}
-			log.Debug("recv", "msg", string(message))
-			if !gjson.ValidBytes(message) {
-				log.Error("invalid json message")
-				continue
-			}
-			msg := gjson.ParseBytes(message)
-			echo := msg.Get("echo")
-			if echo.Exists() {
-				e := echo.Int()
-				retCode := msg.Get("retcode").Int()
-				if ch, ok := b.syncIdMap.LoadAndDelete(e); ok {
-					ch0 := ch.(chan gjson.Result)
-					if retCode != 0 {
-						log.Error("request failed", "retcode", retCode, "msg", msg.Get("message"))
-					} else {
-						ch0 <- msg.Get("data")
+			for {
+				t, message, err := b.c.ReadMessage()
+				if err != nil {
+					log.Error("read error", "error", err)
+					b.c = nil
+					break
+				}
+				if t != websocket.TextMessage {
+					continue
+				}
+				log.Debug("recv", "msg", string(message))
+				if !gjson.ValidBytes(message) {
+					log.Error("invalid json message")
+					continue
+				}
+				msg := gjson.ParseBytes(message)
+				echo := msg.Get("echo")
+				if echo.Exists() {
+					e := echo.Int()
+					retCode := msg.Get("retcode").Int()
+					if ch, ok := b.syncIdMap.LoadAndDelete(e); ok {
+						ch0 := ch.(chan gjson.Result)
+						if retCode != 0 {
+							log.Error("request failed", "retcode", retCode, "msg", msg.Get("message"))
+						} else {
+							ch0 <- msg.Get("data")
+						}
+						close(ch0)
 					}
-					close(ch0)
+					continue
 				}
-				continue
-			}
-			postType := msg.Get("post_type").String()
-			func() {
-				b.handlerLock.RLock()
-				defer b.handlerLock.RUnlock()
-				h, ok := b.handler[postType]
-				if !ok {
-					return
-				}
-				subType := msg.Get(postType + "_type").String()
-				h2, ok := h[subType]
-				if !ok {
-					return
-				}
-				if bd := builder[postType][subType]; bd == nil {
-					log.Error("cannot find message builder: " + postType)
-				} else {
-					m := bd()
-					err = json.Unmarshal(message, m)
-					if err != nil {
-						log.Error("json unmarshal failed", "error", err)
+				postType := msg.Get("post_type").String()
+				func() {
+					b.handlerLock.RLock()
+					defer b.handlerLock.RUnlock()
+					h, ok := b.handler[postType]
+					if !ok {
 						return
 					}
-					fun := func() {
-						defer func() {
-							if r := recover(); r != nil {
-								log.Error("panic recovered", "error", r, "stack", string(debug.Stack()))
-							}
-						}()
-						for _, f := range h2 {
-							if !f(m) {
-								break
+					subType := msg.Get(postType + "_type").String()
+					h2, ok := h[subType]
+					if !ok {
+						return
+					}
+					if bd := builder[postType][subType]; bd == nil {
+						log.Error("cannot find message builder: " + postType)
+					} else {
+						m := bd()
+						err = json.Unmarshal(message, m)
+						if err != nil {
+							log.Error("json unmarshal failed", "error", err)
+							return
+						}
+						fun := func() {
+							defer func() {
+								if r := recover(); r != nil {
+									log.Error("panic recovered", "error", r, "stack", string(debug.Stack()))
+								}
+							}()
+							for _, f := range h2 {
+								if !f(m) {
+									break
+								}
 							}
 						}
+						b.Run(fun)
 					}
-					b.Run(fun)
-				}
-			}()
+				}()
+			}
 		}
 	}()
 	return b, nil
@@ -143,6 +160,7 @@ type Bot struct {
 	syncIdMap   sync.Map
 	eventChan   *goutil.BlockingQueue[func()]
 	limiter     atomic.Pointer[limiter]
+	closed      atomic.Bool
 }
 
 type limiter struct {
@@ -163,7 +181,12 @@ func (l *limiter) check() bool {
 }
 
 func (b *Bot) Close() error {
-	return b.c.Close()
+	b.closed.Store(true)
+	c := b.c
+	if c != nil {
+		return c.Close()
+	}
+	return nil
 }
 
 // SetLimiter 设置限流器，limiterType为"wait"表示等待，为"drop"表示丢弃
@@ -199,7 +222,12 @@ func (b *Bot) request(action string, params any) (gjson.Result, error) {
 	}
 	ch := make(chan gjson.Result, 1)
 	b.syncIdMap.Store(echo, ch)
-	err = b.c.WriteMessage(websocket.TextMessage, buf)
+	c := b.c
+	if c == nil {
+		slog.Error("disconnected, send failed, please wait for reconnecting")
+		return gjson.Result{}, err
+	}
+	err = c.WriteMessage(websocket.TextMessage, buf)
 	if err != nil {
 		slog.Error("send error", "error", err)
 		return gjson.Result{}, err
