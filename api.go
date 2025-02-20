@@ -175,3 +175,24 @@ func (b *Bot) SetGroupLeave(group int64, isDismiss bool) error {
 	}{group, isDismiss})
 	return err
 }
+
+// SetFriendAddRequest 处理加好友请求，flag-从请求中获取，approve-是否同意，remark-同意好友后的备注
+func (b *Bot) SetFriendAddRequest(flag string, approve bool, remark string) error {
+	_, err := b.request("set_friend_add_request", &struct {
+		Flag    string `json:"flag"`
+		Approve bool   `json:"approve"`
+		Remark  string `json:"remark,omitempty"`
+	}{flag, approve, remark})
+	return err
+}
+
+// SetGroupAddRequest 处理加群请求／邀请，flag-从请求中获取，subType-从请求中获取，approve-是否同意，reason-拒绝理由
+func (b *Bot) SetGroupAddRequest(flag string, subType string, approve bool, reason string) error {
+	_, err := b.request("set_group_add_request", &struct {
+		Flag    string `json:"flag"`
+		SubType string `json:"subType"`
+		Approve bool   `json:"approve"`
+		Reason  string `json:"reason,omitempty"`
+	}{flag, subType, approve, reason})
+	return err
+}
