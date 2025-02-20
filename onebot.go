@@ -43,13 +43,13 @@ func Connect(host string, port int, channel WsChannel, accessToken string, qq in
 	if len(accessToken) > 0 {
 		header = http.Header{"Authorization": []string{"Bearer " + accessToken}}
 	}
-	c, resp, err := websocket.DefaultDialer.Dial(addr, header)
+	c, resp, err := websocket.DefaultDialer.Dial(addr, header) // nolint:bodyclose
 	if err != nil {
 		log.Error("Connect failed")
 		return nil, err
 	}
 	if resp != nil {
-		_ = resp.Body.Close() // 仅为了解决lint警告，调用Close方法其实是没有任何效果的
+		_ = resp.Body.Close()
 	}
 	log.Info("Connected successfully")
 	b := &Bot{QQ: qq, c: c, handler: make(map[string]map[string][]listenHandler)}
@@ -66,13 +66,13 @@ func Connect(host string, port int, channel WsChannel, accessToken string, qq in
 			if b.c == nil {
 				time.Sleep(3 * time.Second)
 				log.Info("trying to reconnect")
-				c, resp, err = websocket.DefaultDialer.Dial(addr, header)
+				c, resp, err = websocket.DefaultDialer.Dial(addr, header) // nolint:bodyclose
 				if err != nil {
 					log.Error("Connect failed")
 					continue
 				}
 				if resp != nil {
-					_ = resp.Body.Close() // 仅为了解决lint警告，调用Close方法其实是没有任何效果的
+					_ = resp.Body.Close()
 				}
 				log.Info("Connected successfully")
 				b.c = c
