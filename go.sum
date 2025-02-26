@@ -1,5 +1,7 @@
 github.com/CuteReimu/goutil v0.0.0-20240422034935-940ce604f878 h1:DdooD0YHFR3Aoay37mJpUUcKSQ3WUytbfVYYTmocvUI=
 github.com/CuteReimu/goutil v0.0.0-20240422034935-940ce604f878/go.mod h1:+ic3kSXScM0/rxJdO/gGydQKuOO9Y1f/t0ajl1xRfeY=
+github.com/CuteReimu/goutil v0.0.0-20241125080311-363c2b24f74b h1:fVXYv6HhxRg6PNlCXPiNAVvkcobXuxxMEqHFAtzf7rU=
+github.com/CuteReimu/goutil v0.0.0-20241125080311-363c2b24f74b/go.mod h1:V2hZ6Hcawpca/FPdpFSWyvnRnNeYnzO4sWrdvjDN4ME=
 github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
 github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/tidwall/gjson v1.18.0 h1:FIDeeyB800efLX89e5a8Y0BNH+LOngJyGrIWxG2FKQY=
