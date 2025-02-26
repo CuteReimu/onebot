@@ -60,5 +60,5 @@ go get -u github.com/CuteReimu/onebot
   - [x] 快速操作
   - [x] 断线重连
 
-> [!NOTICE]
+> [!NOTE]
 > 由于文档中Websocket没有指明是否支持快速操作(quick_operation)，因此本sdk没有对其进行支持。
