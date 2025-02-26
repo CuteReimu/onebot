@@ -65,7 +65,7 @@ func (b *Bot) DeleteMessage(messageId int64) error {
 	return err
 }
 
-type Msg struct {
+type Message struct {
 	Time        int32        `json:"time"`         // 发送时间
 	MessageType MessageType  `json:"message_type"` // 消息类型
 	MessageId   int32        `json:"message_id"`   // 消息ID
@@ -74,21 +74,21 @@ type Msg struct {
 	Message     MessageChain `json:"message"`      // 消息内容
 }
 
-// GetMsg 获取消息
-func (b *Bot) GetMsg(messageId int32) (*Msg, error) {
+// GetMessage 获取消息
+func (b *Bot) GetMessage(messageId int32) (*Message, error) {
 	result, err := b.request("get_msg", &struct {
 		MessageId int32 `json:"message_id"`
 	}{messageId})
 	if err != nil {
 		return nil, err
 	}
-	var msg *Msg
+	var msg *Message
 	err = json.Unmarshal([]byte(result.Raw), &msg)
 	return msg, err
 }
 
-// GetForwardMsg 获取合并转发消息
-func (b *Bot) GetForwardMsg(id string) (MessageChain, error) {
+// GetForwardMessage 获取合并转发消息
+func (b *Bot) GetForwardMessage(id string) (MessageChain, error) {
 	result, err := b.request("get_forward_msg", &struct {
 		Id string `json:"id"`
 	}{id})
@@ -477,8 +477,8 @@ func (b *Bot) CanSendRecord() (bool, error) {
 }
 
 type BotStatus struct {
-	Online bool `json:"online"` // 当前 QQ 在线
-	Good   bool `json:"good"`   // 状态符合预期，意味着各模块正常运行、功能正常，且 QQ 在线
+	Online *bool `json:"online"` // 当前QQ在线，true|false|nil
+	Good   bool  `json:"good"`   // 状态符合预期，意味着各模块正常运行、功能正常，且 QQ 在线
 }
 
 // GetStatus 获取运行状态
@@ -487,10 +487,9 @@ func (b *Bot) GetStatus() (*BotStatus, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &BotStatus{
-		Online: result.Get("online").Bool(),
-		Good:   result.Get("good").Bool(),
-	}, nil
+	var ret *BotStatus
+	err = json.Unmarshal([]byte(result.Raw), &ret)
+	return ret, err
 }
 
 type BotVersionInfo struct {

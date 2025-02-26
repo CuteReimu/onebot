@@ -29,16 +29,16 @@ go get -u github.com/CuteReimu/onebot
 
 ## 进度
 
-目前已支持的功能有：
+[onebot-11](https://github.com/botuniverse/onebot-11)的文档中的所有功能均已完成，包含：
 
 - 消息链
   - [x] 所有消息类型
   - [x] 所有消息解析
 - 事件
   - [x] 消息事件，包括私聊消息、群消息等
-  - [ ] 通知事件，包括群成员变动、好友变动等
+  - [x] 通知事件，包括群成员变动、好友变动等
   - [x] 请求事件，包括加群请求、加好友请求等
-  - [ ] 元事件，包括 OneBot 生命周期、心跳等
+  - [x] 元事件，包括 OneBot 生命周期、心跳等
 - 请求
   - [x] 发送、撤回消息
   - [x] 获取消息
@@ -59,3 +59,6 @@ go get -u github.com/CuteReimu/onebot
   - [x] 请求限流
   - [x] 快速操作
   - [x] 断线重连
+
+> [!NOTICE]
+> 由于文档中Websocket没有指明是否支持快速操作(quick_operation)，因此本sdk没有对其进行支持。

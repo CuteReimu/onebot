@@ -9,9 +9,20 @@ func init() {
 		"friend": func() any { return &FriendRequest{} },
 		"group":  func() any { return &GroupRequest{} },
 	}
+	builder["meta_event"] = map[string]func() any{
+		"lifecycle": func() any { return &LifecycleMetaEvent{} },
+		"heartbeat": func() any { return &HeartbeatMetaEvent{} },
+	}
 	builder["notice"] = map[string]func() any{
+		"group_upload":   func() any { return &GroupUploadNotice{} },
+		"group_admin":    func() any { return &GroupAdminNotice{} },
 		"group_decrease": func() any { return &GroupDecreaseNotice{} },
 		"group_increase": func() any { return &GroupIncreaseNotice{} },
+		"group_ban":      func() any { return &GroupBanNotice{} },
+		"friend_add":     func() any { return &FriendAddNotice{} },
+		"group_recall":   func() any { return &GroupRecallNotice{} },
+		"friend_recall":  func() any { return &FriendRecallNotice{} },
+		"notify":         func() any { return &NotifyNotice{} },
 	}
 }
 
@@ -114,6 +125,89 @@ func (b *Bot) ListenGroupRequest(l func(request *GroupRequest) bool) {
 	listen(b, "request", "group", l)
 }
 
+type LifecycleMetaEventSubType string
+
+const (
+	LifecycleMetaEventEnable  LifecycleMetaEventSubType = "enable"  // OneBot启用
+	LifecycleMetaEventDisable LifecycleMetaEventSubType = "disable" // OneBot停用
+	LifecycleMetaEventConnect LifecycleMetaEventSubType = "connect" // WebSocket连接成功
+)
+
+// LifecycleMetaEvent 生命周期事件
+type LifecycleMetaEvent struct {
+	Time          int64                     `json:"time"`            // 事件发生的时间戳
+	SelfId        int64                     `json:"self_id"`         // 收到事件的机器人 QQ 号
+	PostType      string                    `json:"post_type"`       // "meta_event"
+	MetaEventType string                    `json:"meta_event_type"` // "lifecycle"
+	SubType       LifecycleMetaEventSubType `json:"sub_type"`        // 请求子类型
+}
+
+// ListenLifecycleMetaEvent 监听生命周期
+func (b *Bot) ListenLifecycleMetaEvent(l func(notice *LifecycleMetaEvent) bool) {
+	listen(b, "meta_event", "lifecycle", l)
+}
+
+// HeartbeatMetaEvent 心跳事件
+type HeartbeatMetaEvent struct {
+	Time          int64     `json:"time"`            // 事件发生的时间戳
+	SelfId        int64     `json:"self_id"`         // 收到事件的机器人 QQ 号
+	PostType      string    `json:"post_type"`       // "meta_event"
+	MetaEventType string    `json:"meta_event_type"` // "heartbeat"
+	Status        BotStatus `json:"status"`          // 状态信息
+	Interval      int64     `json:"interval"`        // 到下次心跳的间隔，单位毫秒
+}
+
+// ListenHeartbeatMetaEvent 监听心跳事件
+func (b *Bot) ListenHeartbeatMetaEvent(l func(notice *HeartbeatMetaEvent) bool) {
+	listen(b, "meta_event", "heartbeat", l)
+}
+
+type File struct {
+	Id    string `json:"id"`    // 文件 ID
+	Name  string `json:"name"`  // 文件名
+	Size  int64  `json:"size"`  // 文件大小（字节数）
+	Busid int64  `json:"busid"` // busid（目前不清楚有什么作用）
+}
+
+// GroupUploadNotice 群文件上传
+type GroupUploadNotice struct {
+	Time       int64  `json:"time"`        // 事件发生的时间戳
+	SelfId     int64  `json:"self_id"`     // 收到事件的机器人 QQ 号
+	PostType   string `json:"post_type"`   // "notice"
+	NoticeType string `json:"notice_type"` // "group_upload"
+	GroupId    int64  `json:"group_id"`    // 群号
+	UserId     int64  `json:"user_id"`     // 发送者 QQ 号
+	File       File   `json:"file"`        // 文件信息
+}
+
+// ListenGroupUploadNotice 监听群文件上传
+func (b *Bot) ListenGroupUploadNotice(l func(notice *GroupUploadNotice) bool) {
+	listen(b, "notice", "group_upload", l)
+}
+
+type GroupAdminNoticeSubType string
+
+const (
+	GroupAdminNoticeSet   GroupAdminNoticeSubType = "set"   // 设置管理员
+	GroupAdminNoticeUnset GroupAdminNoticeSubType = "unset" // 取消管理员
+)
+
+// GroupAdminNotice 群管理员变动
+type GroupAdminNotice struct {
+	Time       int64                   `json:"time"`        // 事件发生的时间戳
+	SelfId     int64                   `json:"self_id"`     // 收到事件的机器人 QQ 号
+	PostType   string                  `json:"post_type"`   // "notice"
+	NoticeType string                  `json:"notice_type"` // "group_admin"
+	SubType    GroupAdminNoticeSubType `json:"sub_type"`    // 事件子类型
+	GroupId    int64                   `json:"group_id"`    // 群号
+	UserId     int64                   `json:"user_id"`     // 管理员 QQ 号
+}
+
+// ListenGroupAdminNotice 监听群管理员变动
+func (b *Bot) ListenGroupAdminNotice(l func(notice *GroupAdminNotice) bool) {
+	listen(b, "notice", "group_admin", l)
+}
+
 type GroupDecreaseNoticeSubType string
 
 const (
@@ -161,4 +255,110 @@ type GroupIncreaseNotice struct {
 // ListenGroupIncreaseNotice 监听群成员增加
 func (b *Bot) ListenGroupIncreaseNotice(l func(notice *GroupIncreaseNotice) bool) {
 	listen(b, "notice", "group_increase", l)
+}
+
+type GroupBanNoticeSubType string
+
+const (
+	GroupBanNoticeBan     GroupBanNoticeSubType = "ban"      // 禁言
+	GroupBanNoticeLiftBan GroupBanNoticeSubType = "lift_ban" // 解除禁言
+)
+
+// GroupBanNotice 群禁言
+type GroupBanNotice struct {
+	Time       int64                 `json:"time"`        // 事件发生的时间戳
+	SelfId     int64                 `json:"self_id"`     // 收到事件的机器人 QQ 号
+	PostType   string                `json:"post_type"`   // "notice"
+	NoticeType string                `json:"notice_type"` // "group_ban"
+	SubType    GroupBanNoticeSubType `json:"sub_type"`    // 事件子类型
+	GroupId    int64                 `json:"group_id"`    // 群号
+	OperatorId int64                 `json:"operator_id"` // 操作者 QQ 号
+	UserId     int64                 `json:"user_id"`     // 加入者 QQ 号
+	Duration   int64                 `json:"duration"`    // 禁言时长，单位秒
+}
+
+// ListenGroupBanNotice 监听群禁言
+func (b *Bot) ListenGroupBanNotice(l func(notice *GroupBanNotice) bool) {
+	listen(b, "notice", "group_ban", l)
+}
+
+// FriendAddNotice 好友添加
+type FriendAddNotice struct {
+	Time       int64  `json:"time"`        // 事件发生的时间戳
+	SelfId     int64  `json:"self_id"`     // 收到事件的机器人 QQ 号
+	PostType   string `json:"post_type"`   // "notice"
+	NoticeType string `json:"notice_type"` // "friend_add"
+	UserId     int64  `json:"user_id"`     // 新添加好友 QQ 号
+}
+
+// ListenFriendAddNotice 监听好友添加
+func (b *Bot) ListenFriendAddNotice(l func(notice *FriendAddNotice) bool) {
+	listen(b, "notice", "friend_add", l)
+}
+
+// GroupRecallNotice 群消息撤回
+type GroupRecallNotice struct {
+	Time       int64  `json:"time"`        // 事件发生的时间戳
+	SelfId     int64  `json:"self_id"`     // 收到事件的机器人 QQ 号
+	PostType   string `json:"post_type"`   // "notice"
+	NoticeType string `json:"notice_type"` // "group_recall"
+	GroupId    int64  `json:"group_id"`    // 群号
+	UserId     int64  `json:"user_id"`     // 消息发送者 QQ 号
+	OperatorId int64  `json:"operator_id"` // 操作者 QQ 号
+	MessageId  int64  `json:"message_id"`  // 被撤回的消息 ID
+}
+
+// ListenGroupRecallNotice 监听群消息撤回
+func (b *Bot) ListenGroupRecallNotice(l func(notice *GroupRecallNotice) bool) {
+	listen(b, "notice", "group_recall", l)
+}
+
+// FriendRecallNotice 好友消息撤回
+type FriendRecallNotice struct {
+	Time       int64  `json:"time"`        // 事件发生的时间戳
+	SelfId     int64  `json:"self_id"`     // 收到事件的机器人 QQ 号
+	PostType   string `json:"post_type"`   // "notice"
+	NoticeType string `json:"notice_type"` // "friend_recall"
+	UserId     int64  `json:"user_id"`     // 好友 QQ 号
+	MessageId  int64  `json:"message_id"`  // 被撤回的消息 ID
+}
+
+// ListenFriendRecallNotice 监听好友消息撤回
+func (b *Bot) ListenFriendRecallNotice(l func(notice *FriendRecallNotice) bool) {
+	listen(b, "notice", "friend_recall", l)
+}
+
+type NotifyNoticeSubType string
+
+const (
+	NotifyNoticePoke      NotifyNoticeSubType = "poke"       // 群内戳一戳
+	NotifyNoticeLuckyKing NotifyNoticeSubType = "lucky_king" // 群红包运气王
+	NotifyNoticeHonor     NotifyNoticeSubType = "honor"      // 群成员荣誉变更
+)
+
+type NotifyNoticeHonorType string
+
+const (
+	NotifyNoticeNone      NotifyNoticeSubType = ""
+	NotifyNoticeTalkative NotifyNoticeSubType = "talkative" // 龙王
+	NotifyNoticePerformer NotifyNoticeSubType = "performer" // 群聊之火
+	NotifyNoticeEmotion   NotifyNoticeSubType = "emotion"   // 快乐源泉
+)
+
+// NotifyNotice 其它通知
+type NotifyNotice struct {
+	Time       int64                 `json:"time"`                 // 事件发生的时间戳
+	SelfId     int64                 `json:"self_id"`              // 收到事件的机器人 QQ 号
+	PostType   string                `json:"post_type"`            // "notice"
+	NoticeType string                `json:"notice_type"`          // "notify"
+	SubType    NotifyNoticeSubType   `json:"sub_type"`             // 事件子类型
+	GroupId    int64                 `json:"group_id"`             // 群号
+	HonorType  NotifyNoticeHonorType `json:"honor_type,omitempty"` // （群成员荣誉变更）荣誉类型
+	UserId     int64                 `json:"user_id"`              // （戳一戳）发送者/（红包）发送者/（荣誉变更）成员 QQ 号
+	TargetId   int64                 `json:"target_id,omitempty"`  // （戳一戳）被戳者/（红包）运气王 QQ 号
+}
+
+// ListenNotifyNotice 监听其它通知
+func (b *Bot) ListenNotifyNotice(l func(notice *NotifyNotice) bool) {
+	listen(b, "notice", "notify", l)
 }
