@@ -253,10 +253,6 @@ func (b *Bot) request(action string, params any) (gjson.Result, error) {
 	return result, nil
 }
 
-type simplifier interface {
-	simplify() any
-}
-
 type requestMessage struct {
 	Echo   int64  `json:"echo"`
 	Action string `json:"action"`

@@ -38,13 +38,6 @@ type PrivateMessage struct {
 	Sender      Profile               `json:"sender"`       // 发送人信息
 }
 
-func (m *PrivateMessage) simplify() any {
-	m2 := *m
-	m2.Message = nil
-	m2.RawMessage = ""
-	return &m2
-}
-
 // ListenPrivateMessage 监听私聊消息
 func (b *Bot) ListenPrivateMessage(l func(message *PrivateMessage) bool) {
 	listen(b, "message", "private", l)
@@ -73,13 +66,6 @@ type GroupMessage struct {
 	RawMessage  string              `json:"raw_message"`  // 原始消息内容
 	Font        int32               `json:"font"`         // 字体
 	Sender      Member              `json:"sender"`       // 发送人信息
-}
-
-func (m *GroupMessage) simplify() any {
-	m2 := *m
-	m2.Message = nil
-	m2.RawMessage = ""
-	return &m2
 }
 
 // ListenGroupMessage 监听群消息
