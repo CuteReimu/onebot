@@ -257,22 +257,6 @@ type simplifier interface {
 	simplify() any
 }
 
-type quickOperationMessage struct {
-	Context   any `json:"context"`
-	Operation any `json:"operation"`
-}
-
-func (b *Bot) quickOperation(context, operation any) error {
-	if s, ok := context.(simplifier); ok {
-		context = s.simplify()
-	}
-	_, err := b.request(".handle_quick_operation", &quickOperationMessage{
-		Context:   context,
-		Operation: operation,
-	})
-	return err
-}
-
 type requestMessage struct {
 	Echo   int64  `json:"echo"`
 	Action string `json:"action"`

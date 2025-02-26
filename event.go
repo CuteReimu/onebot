@@ -82,27 +82,6 @@ func (m *GroupMessage) simplify() any {
 	return &m2
 }
 
-// Delete 撤回（需要权限），发送者是匿名用户时无效
-func (m *GroupMessage) Delete(b *Bot) error {
-	return b.quickOperation(m, &struct {
-		Delete bool `json:"delete"`
-	}{true})
-}
-
-// Kick 把发送者踢出群组（需要权限），不拒绝此人后续加群请求，发送者是匿名用户时无效
-func (m *GroupMessage) Kick(b *Bot) error {
-	return b.quickOperation(m, &struct {
-		Kick bool `json:"kick"`
-	}{true})
-}
-
-func (m *GroupMessage) Ban(b *Bot, duration int32) error {
-	return b.quickOperation(m, &struct {
-		Ban         bool  `json:"ban"`
-		BanDuration int32 `json:"ban_duration"`
-	}{true, duration})
-}
-
 // ListenGroupMessage 监听群消息
 func (b *Bot) ListenGroupMessage(l func(message *GroupMessage) bool) {
 	listen(b, "message", "group", l)
