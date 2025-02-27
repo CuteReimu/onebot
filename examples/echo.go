@@ -29,7 +29,7 @@ func main() {
 		var ret MessageChain
 		ret = append(ret, &Text{Text: "你说了：\n"})
 		ret = append(ret, message.Message...)
-		_, err := b.SendPrivateMessage(message.UserId, ret)
+		err := message.Reply(b, ret)
 		if err != nil {
 			slog.Error("发送失败", "error", err)
 		}

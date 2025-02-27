@@ -49,6 +49,20 @@ type PrivateMessage struct {
 	Sender      Profile               `json:"sender"`       // 发送人信息
 }
 
+func (m *PrivateMessage) simplify() any {
+	m2 := *m
+	m2.Message = nil
+	m2.RawMessage = ""
+	return &m2
+}
+
+// Reply 回复
+func (m *PrivateMessage) Reply(b *Bot, reply MessageChain) error {
+	return b.quickOperation(m, &struct {
+		Reply MessageChain `json:"reply"`
+	}{reply})
+}
+
 // ListenPrivateMessage 监听私聊消息
 func (b *Bot) ListenPrivateMessage(l func(message *PrivateMessage) bool) {
 	listen(b, "message", "private", l)
@@ -79,6 +93,43 @@ type GroupMessage struct {
 	Sender      Member              `json:"sender"`       // 发送人信息
 }
 
+func (m *GroupMessage) simplify() any {
+	m2 := *m
+	m2.Message = nil
+	m2.RawMessage = ""
+	return &m2
+}
+
+// Reply 回复
+func (m *GroupMessage) Reply(b *Bot, reply MessageChain, atSender bool) error {
+	return b.quickOperation(m, &struct {
+		Reply    MessageChain `json:"reply"`
+		AtSender bool         `json:"at_sender"`
+	}{reply, atSender})
+}
+
+// Delete 撤回（需要权限），发送者是匿名用户时无效
+func (m *GroupMessage) Delete(b *Bot) error {
+	return b.quickOperation(m, &struct {
+		Delete bool `json:"delete"`
+	}{true})
+}
+
+// Kick 把发送者踢出群组（需要权限），不拒绝此人后续加群请求，发送者是匿名用户时无效
+func (m *GroupMessage) Kick(b *Bot) error {
+	return b.quickOperation(m, &struct {
+		Kick bool `json:"kick"`
+	}{true})
+}
+
+// Ban 把发送者禁言，对匿名用户也有效
+func (m *GroupMessage) Ban(b *Bot, duration int32) error {
+	return b.quickOperation(m, &struct {
+		Ban         bool  `json:"ban"`
+		BanDuration int32 `json:"ban_duration"`
+	}{true, duration})
+}
+
 // ListenGroupMessage 监听群消息
 func (b *Bot) ListenGroupMessage(l func(message *GroupMessage) bool) {
 	listen(b, "message", "group", l)
@@ -93,6 +144,14 @@ type FriendRequest struct {
 	UserId      int64  `json:"user_id"`      // 发送请求的 QQ 号
 	Comment     string `json:"comment"`      // 验证信息
 	Flag        string `json:"flag"`         // 请求 flag，在调用处理请求的 API 时需要传入
+}
+
+// Reply 响应加好友请求，approve是是否同意，remark是添加后的好友备注（仅在同意时有效）
+func (r *FriendRequest) Reply(b *Bot, approve bool, remark string) error {
+	return b.quickOperation(r, &struct {
+		Approve bool   `json:"approve"`
+		Remark  string `json:"remark,omitempty"`
+	}{approve, remark})
 }
 
 // ListenFriendRequest 监听加好友请求
@@ -118,6 +177,14 @@ type GroupRequest struct {
 	UserId      int64               `json:"user_id"`      // 发送请求的 QQ 号
 	Comment     string              `json:"comment"`      // 验证信息
 	Flag        string              `json:"flag"`         // 请求 flag，在调用处理请求的 API 时需要传入
+}
+
+// Reply 响应加群请求／邀请，approve是是否同意，reason是拒绝理由（仅在拒绝时有效）
+func (r *GroupRequest) Reply(b *Bot, approve bool, reason string) error {
+	return b.quickOperation(r, &struct {
+		Approve bool   `json:"approve"`
+		Reason  string `json:"reason,omitempty"`
+	}{approve, reason})
 }
 
 // ListenGroupRequest 监听加群请求 / 邀请
