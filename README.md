@@ -25,7 +25,7 @@ OneBot是一个通用聊天机器人应用接口标准。
 go get -u github.com/CuteReimu/onebot
 ```
 
-关于如何使用，可以参考`examples`文件夹下的例子
+关于如何使用，可以参考[examples文件夹](examples/echo.go)下的例子
 
 ## 进度
 
