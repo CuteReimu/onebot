@@ -109,7 +109,7 @@ func (b *Bot) GetForwardMessage(id string) ([]any, error) {
 			return nil, errors.New("cannot find message builder: " + postType)
 		} else {
 			m := bd()
-			err = json.Unmarshal([]byte(result.Raw), m)
+			err = json.Unmarshal([]byte(msg.Raw), m)
 			if err != nil {
 				slog.Error("json unmarshal failed", "error", err)
 				return nil, err
