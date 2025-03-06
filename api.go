@@ -98,7 +98,7 @@ func (b *Bot) GetForwardMessage(id string) ([]any, error) {
 		return nil, err
 	}
 	var ret []any
-	for _, msg := range result.Array() {
+	for _, msg := range result.Get("messages").Array() {
 		postType := msg.Get("post_type").String()
 		if postType == "message_sent" {
 			postType = "message"
