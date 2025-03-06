@@ -100,6 +100,9 @@ func (b *Bot) GetForwardMessage(id string) ([]any, error) {
 	var ret []any
 	for _, msg := range result.Array() {
 		postType := msg.Get("post_type").String()
+		if postType == "message_sent" {
+			postType = "message"
+		}
 		subType := msg.Get(postType + "_type").String()
 		if bd := builder[postType][subType]; bd == nil {
 			slog.Error("cannot find message builder: " + postType)
