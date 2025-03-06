@@ -2,7 +2,9 @@ package onebot
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log/slog"
 )
 
 // SendPrivateMessage 发送私聊消息，消息ID
@@ -88,18 +90,31 @@ func (b *Bot) GetMessage(messageId int32) (*Message, error) {
 }
 
 // GetForwardMessage 获取合并转发消息
-func (b *Bot) GetForwardMessage(id string) (MessageChain, error) {
+func (b *Bot) GetForwardMessage(id string) ([]any, error) {
 	result, err := b.request("get_forward_msg", &struct {
 		Id string `json:"id"`
 	}{id})
 	if err != nil {
 		return nil, err
 	}
-	var msg struct {
-		Message MessageChain `json:"message"`
+	var ret []any
+	for _, msg := range result.Array() {
+		postType := msg.Get("post_type").String()
+		subType := msg.Get(postType + "_type").String()
+		if bd := builder[postType][subType]; bd == nil {
+			slog.Error("cannot find message builder: " + postType)
+			return nil, errors.New("cannot find message builder: " + postType)
+		} else {
+			m := bd()
+			err = json.Unmarshal([]byte(result.Raw), m)
+			if err != nil {
+				slog.Error("json unmarshal failed", "error", err)
+				return nil, err
+			}
+			ret = append(ret, m)
+		}
 	}
-	err = json.Unmarshal([]byte(result.Raw), &msg)
-	return msg.Message, err
+	return ret, nil
 }
 
 // SendLike 发送好友赞，userId-对方QQ号，times-赞的次数（每个好友每天最多10次）

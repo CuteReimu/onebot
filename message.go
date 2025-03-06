@@ -334,7 +334,7 @@ func (m *Reply) String() string {
 
 // Forward 合并转发
 type Forward struct {
-	Id string `json:"id"` // 合并转发 ID，需调用 Bot.GetForwardMsg 方法获取具体内容
+	Id string `json:"id"` // 合并转发 ID，需调用 Bot.GetForwardMessage 方法获取具体内容
 }
 
 func (m *Forward) GetMessageType() string {
