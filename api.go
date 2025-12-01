@@ -320,36 +320,22 @@ func (b *Bot) GetGroupList() ([]*GroupInfo, error) {
 	return groupInfo, err
 }
 
-type String string
-
-func (s *String) UnmarshalJSON(bytes []byte) error {
-	if len(bytes) > 2 && bytes[0] == '"' && bytes[len(bytes)-1] == '"' {
-		return json.Unmarshal(bytes, (*string)(s))
-	}
-	*s = String(bytes)
-	return nil
-}
-
-func (s *String) String() string {
-	return string(*s)
-}
-
 type GroupMemberInfo struct {
-	GroupId         int64  `json:"group_id"`          // 群号
-	UserId          int64  `json:"user_id"`           // QQ 号
-	Nickname        string `json:"nickname"`          // 昵称
-	Card            string `json:"card"`              // 群名片／备注
-	Sex             Sex    `json:"sex"`               // 性别
-	Age             int32  `json:"age"`               // 年龄
-	Area            string `json:"area"`              // 地区
-	JoinTime        int32  `json:"join_time"`         // 加群时间戳
-	LastSentTime    int32  `json:"last_sent_time"`    // 最后发言时间戳
-	Level           String `json:"level"`             // 成员等级（onebot11标准这里是字符串，但很多框架把它返回了一个整型数值，这里就用这个方式兼容一下）
-	Role            Role   `json:"role"`              // 角色
-	Unfriendly      bool   `json:"unfriendly"`        // 是否不良记录成员
-	Title           string `json:"title"`             // 专属头衔
-	TitleExpireTime int32  `json:"title_expire_time"` // 专属头衔过期时间戳
-	CardChangeable  bool   `json:"card_changeable"`   // 是否允许修改群名片
+	GroupId         int64       `json:"group_id"`          // 群号
+	UserId          int64       `json:"user_id"`           // QQ 号
+	Nickname        string      `json:"nickname"`          // 昵称
+	Card            string      `json:"card"`              // 群名片／备注
+	Sex             Sex         `json:"sex"`               // 性别
+	Age             int32       `json:"age"`               // 年龄
+	Area            string      `json:"area"`              // 地区
+	JoinTime        int32       `json:"join_time"`         // 加群时间戳
+	LastSentTime    int32       `json:"last_sent_time"`    // 最后发言时间戳
+	Level           json.Number `json:"level"`             // 成员等级
+	Role            Role        `json:"role"`              // 角色
+	Unfriendly      bool        `json:"unfriendly"`        // 是否不良记录成员
+	Title           string      `json:"title"`             // 专属头衔
+	TitleExpireTime int32       `json:"title_expire_time"` // 专属头衔过期时间戳
+	CardChangeable  bool        `json:"card_changeable"`   // 是否允许修改群名片
 }
 
 func (m *GroupMemberInfo) CardOrNickname() string {
