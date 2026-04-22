@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/tidwall/gjson"
 	"log/slog"
 	"strings"
+
+	"github.com/tidwall/gjson"
 )
 
 type messageSegment struct {
@@ -364,7 +365,7 @@ func (m *Node) String() string {
 	if len(m.Id) == 0 {
 		var sb strings.Builder
 		for _, m := range m.Content {
-			sb.WriteString(fmt.Sprint(m))
+			_, _ = fmt.Fprint(&sb, m)
 		}
 		return fmt.Sprintf("[CQ:node,user_id=%s,nickname=%s,content=%s]", m.UserId, m.Nickname, sb.String())
 	}
